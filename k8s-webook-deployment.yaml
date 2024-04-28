@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webook-live
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webook-live
+  template:
+    metadata:
+      labels:
+        app: webook-live
+    spec:
+      containers:
+        - name: webook-live
+          image: docker.io/leoleecn/webook:v0.0.1
+          ports:
+            - containerPort: 8080
