@@ -21,13 +21,30 @@ import (
 
 func main() {
 	// db := initDB()
-	// server := initWebServer()
+	//server := initWebServer()
 
 	// u := initUser(db)
 	// u.RegisterRoutesV1(server.Group("/users"))
+
 	server := gin.Default()
+	server.Use(cors.New(cors.Config{
+		AllowMethods:     []string{"PUT", "PATCH"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"x-jwt-token"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+		AllowOriginFunc: func(origin string) bool {
+			if strings.HasPrefix(origin, "http://localhost") {
+				return true
+			}
+			return strings.Contains(origin, "webook.com")
+		},
+	}))
+
 	server.GET("/", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "hello, world\n")
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "Hello, World!",
+		})
 	})
 
 	server.Run(":8080")

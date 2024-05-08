@@ -5,10 +5,9 @@ metadata:
 spec:
   selector:
     app: webook-live
+  type: LoadBalancer
   ports:
     - protocol: TCP
       name: http
-      port: 10080
+      port: 18080 # 10080 会被Chrome标记为不安全端口
       targetPort: 8080
-  type: LoadBalancer
-  

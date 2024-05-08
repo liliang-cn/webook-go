@@ -1,5 +1,5 @@
 FROM ubuntu:latest
-LABEL authors="liliang"
+LABEL authors="leoleecn"
 
 COPY webook /app/webook
 

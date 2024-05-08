@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: webook-live
-          image: docker.io/leoleecn/webook:v0.0.1
+          image: leoleecn/webook:v0.0.1
           ports:
             - containerPort: 8080
