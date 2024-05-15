@@ -1,5 +1,4 @@
-FROM ubuntu:latest
-LABEL authors="leoleecn"
+FROM golang:1.22
 
 COPY webook /app/webook
 

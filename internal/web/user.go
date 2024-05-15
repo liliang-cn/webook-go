@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
@@ -43,7 +44,7 @@ func (u *UserHandler) RegisterRoutesV1(ug *gin.RouterGroup) {
 	ug.POST("/signup", u.SignUp)
 	//ug.POST("/login", u.Login)
 	ug.POST("/login", u.LoginJWT)
-	ug.POST("/edit", u.Edit)
+	ug.POST("/edit", u.EditJWT)
 	//ug.GET("/profile", u.Profile)
 	ug.GET("/profile", u.ProfileJWT)
 	ug.GET("/status", u.Status)
@@ -209,6 +210,9 @@ func (u *UserHandler) LoginJWT(ctx *gin.Context) {
 
 	claims := &UserClaims{
 		Uid: user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 30)),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
@@ -264,6 +268,46 @@ func (u *UserHandler) Edit(ctx *gin.Context) {
 
 	err := u.svc.EditProfile(ctx, uid.(int64), domain.User{
 		ID:          uid.(int64),
+		NickName:    req.NickName,
+		Description: req.Description,
+		BirthDate:   req.BirthDate,
+	})
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "profile updated"})
+}
+
+func (u *UserHandler) EditJWT(ctx *gin.Context) {
+	var req Profile
+
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+
+	c, ok := ctx.Get("claims")
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	claims, ok := c.(*UserClaims)
+
+	if !ok {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	if claims.Uid == 0 {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	err := u.svc.EditProfile(ctx, claims.Uid, domain.User{
+		ID:          claims.Uid,
 		NickName:    req.NickName,
 		Description: req.Description,
 		BirthDate:   req.BirthDate,

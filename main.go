@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/http"
 	"strings"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"github.com/liliang-cn/webook/config"
 	"github.com/liliang-cn/webook/internal/repository"
 	"github.com/liliang-cn/webook/internal/repository/dao"
 	"github.com/liliang-cn/webook/internal/service"
@@ -20,32 +20,11 @@ import (
 )
 
 func main() {
-	// db := initDB()
-	//server := initWebServer()
+	db := initDB()
+	server := initWebServer()
 
-	// u := initUser(db)
-	// u.RegisterRoutesV1(server.Group("/users"))
-
-	server := gin.Default()
-	server.Use(cors.New(cors.Config{
-		AllowMethods:     []string{"PUT", "PATCH"},
-		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"x-jwt-token"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-		AllowOriginFunc: func(origin string) bool {
-			if strings.HasPrefix(origin, "http://localhost") {
-				return true
-			}
-			return strings.Contains(origin, "webook.com")
-		},
-	}))
-
-	server.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "Hello, World!",
-		})
-	})
+	u := initUser(db)
+	u.RegisterRoutesV1(server.Group("/users"))
 
 	server.Run(":8080")
 }
@@ -67,7 +46,7 @@ func initWebServer() *gin.Engine {
 	}))
 
 	// init session store
-	store, err := redis.NewStore(16, "tcp", "localhost:16379", "", []byte("secret"))
+	store, err := redis.NewStore(16, "tcp", config.Config.Redis.Addr, "", []byte("secret"))
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +72,7 @@ func initUser(db *gorm.DB) *web.UserHandler {
 }
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13316)/webook"))
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN))
 
 	if err != nil {
 		panic(err)
